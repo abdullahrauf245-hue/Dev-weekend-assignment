@@ -19,50 +19,24 @@
 </head>
 <body>
 
-    <!-- ─── Sidebar Navigation ─── -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="logo">
-                <div class="logo-icon">
-                    <i data-lucide="zap"></i>
+    <!-- ─── Top Navigation ─── -->
+    <header class="top-nav" id="top-nav">
+        <div class="nav-content">
+            <div class="nav-left">
+                <div class="logo">
+                    <div class="logo-icon"><i data-lucide="zap"></i></div>
+                    <span class="logo-text">StudySnap</span>
                 </div>
-                <span class="logo-text">StudySnap</span>
+                <nav class="top-links">
+                    <a href="#/home" class="nav-link active" data-route="home"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+                    <a href="#/stats" class="nav-link" data-route="stats"><i data-lucide="bar-chart-3"></i> Statistics</a>
+                </nav>
+            </div>
+            <div class="nav-right">
+                <button class="settings-btn" aria-label="Settings"><i data-lucide="settings"></i></button>
             </div>
         </div>
-
-        <nav class="sidebar-nav">
-            <a href="#/home" class="nav-link active" data-route="home" id="nav-home">
-                <i data-lucide="layout-dashboard"></i>
-                <span>Dashboard</span>
-            </a>
-            <a href="#/stats" class="nav-link" data-route="stats" id="nav-stats">
-                <i data-lucide="bar-chart-3"></i>
-                <span>Statistics</span>
-            </a>
-        </nav>
-
-        <div class="sidebar-footer">
-            <div class="sidebar-info">
-                <i data-lucide="heart"></i>
-                <span>Study smart, not hard</span>
-            </div>
-        </div>
-    </aside>
-
-    <!-- ─── Mobile Top Bar ─── -->
-    <header class="mobile-header" id="mobile-header">
-        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle menu">
-            <i data-lucide="menu"></i>
-        </button>
-        <div class="logo">
-            <div class="logo-icon"><i data-lucide="zap"></i></div>
-            <span class="logo-text">StudySnap</span>
-        </div>
-        <div style="width:40px"></div>
     </header>
-
-    <!-- ─── Sidebar Overlay (mobile) ─── -->
-    <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
     <!-- ─── Main Content Area ─── -->
     <main class="main-content" id="main-content">

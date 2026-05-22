@@ -25,26 +25,23 @@ async function renderHome() {
                 <p>Welcome back! Keep up the great studying.</p>
             </div>
 
-            <div class="stats-bar">
-                <div class="stat-card">
-                    <div class="stat-icon green"><i data-lucide="layers"></i></div>
-                    <div class="stat-info">
-                        <h3>${stats.totalDecks}</h3>
-                        <p>Total Decks</p>
+            <div class="dashboard-grid">
+                <div class="dash-card dash-focus">
+                    <div class="dash-content">
+                        <span class="dash-label">Due for Review</span>
+                        <h2 class="dash-number hero-number">${stats.dueToday}</h2>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon mint"><i data-lucide="credit-card"></i></div>
-                    <div class="stat-info">
-                        <h3>${stats.totalCards}</h3>
-                        <p>Total Cards</p>
+                <div class="dash-card dash-secondary">
+                    <div class="dash-content">
+                        <span class="dash-label">Total Cards</span>
+                        <h2 class="dash-number">${stats.totalCards}</h2>
                     </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-icon dark"><i data-lucide="clock"></i></div>
-                    <div class="stat-info">
-                        <h3>${stats.dueToday}</h3>
-                        <p>Due for Review</p>
+                <div class="dash-card dash-tertiary">
+                    <div class="dash-content">
+                        <span class="dash-label">Total Decks</span>
+                        <h2 class="dash-number">${stats.totalDecks}</h2>
                     </div>
                 </div>
             </div>

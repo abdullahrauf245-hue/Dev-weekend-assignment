@@ -20,10 +20,6 @@ async function handleRoute() {
         if (link.dataset.route === segments[0]) link.classList.add('active');
     });
 
-    // Close mobile sidebar
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('sidebar-overlay').classList.remove('open');
-
     // Route to view
     switch (segments[0]) {
         case 'deck':
@@ -53,16 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('modal-close-btn').addEventListener('click', closeModal);
     document.getElementById('modal-overlay').addEventListener('click', (e) => {
         if (e.target === document.getElementById('modal-overlay')) closeModal();
-    });
-
-    // Mobile menu toggle
-    document.getElementById('mobile-menu-btn').addEventListener('click', () => {
-        document.getElementById('sidebar').classList.toggle('open');
-        document.getElementById('sidebar-overlay').classList.toggle('open');
-    });
-    document.getElementById('sidebar-overlay').addEventListener('click', () => {
-        document.getElementById('sidebar').classList.remove('open');
-        document.getElementById('sidebar-overlay').classList.remove('open');
     });
 
     // Keyboard: Escape closes modal
