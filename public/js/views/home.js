@@ -67,7 +67,7 @@ async function renderHome() {
                                 <button class="btn-icon" onclick="event.stopPropagation();openEditDeckModal('${deck.id}')" title="Edit">
                                     <i data-lucide="pencil" style="width:16px;height:16px;color:var(--text-muted)"></i>
                                 </button>
-                                <button class="btn-icon" onclick="event.stopPropagation();confirmDeleteDeck('${deck.id}','${escapeHTML(deck.name)}')" title="Delete">
+                                <button class="btn-icon" onclick="event.stopPropagation();confirmDeleteDeck('${deck.id}')" title="Delete">
                                     <i data-lucide="trash-2" style="width:16px;height:16px;color:var(--text-muted)"></i>
                                 </button>
                             </div>
@@ -193,19 +193,26 @@ async function handleUpdateDeck(e, deckId) {
 }
 
 // ── Delete Deck ──
-function confirmDeleteDeck(deckId, deckName) {
-    openModal('Delete Deck', `
-        <p style="color:var(--text-secondary);margin-bottom:20px">
-            Are you sure you want to delete <strong>"${deckName}"</strong>? 
-            This will also delete all cards in this deck. This action cannot be undone.
-        </p>
-        <div class="form-actions">
-            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-            <button class="btn btn-danger" onclick="handleDeleteDeck('${deckId}')">
-                <i data-lucide="trash-2"></i> Delete Deck
-            </button>
-        </div>
-    `);
+async function confirmDeleteDeck(deckId) {
+    try {
+        const deck = await API.getDeck(deckId);
+        const deckName = escapeHTML(deck.name);
+        openModal('Delete Deck', `
+            <p style="color:var(--text-secondary);margin-bottom:20px">
+                Are you sure you want to delete <strong>"${deckName}"</strong>? 
+                This will also delete all cards in this deck. This action cannot be undone.
+            </p>
+            <div class="form-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="handleDeleteDeck('${deckId}')">
+                    <i data-lucide="trash-2"></i> Delete Deck
+                </button>
+            </div>
+        `);
+        lucide.createIcons();
+    } catch (err) {
+        showToast('Failed to load deck', 'error');
+    }
 }
 
 async function handleDeleteDeck(deckId) {

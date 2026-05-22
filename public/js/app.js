@@ -3,8 +3,7 @@
 // ══════════════════════════════════════════
 
 const authState = {
-    isAuthed: false,
-    pendingEmail: ''
+    isAuthed: false
 };
 
 function setAuthMode(isAuthed) {
@@ -41,71 +40,33 @@ async function renderAuth() {
     container.innerHTML = `
         <div class="auth-card">
             <h1>Welcome to StudySnap</h1>
-            <p>Enter your email to receive a one-time code.</p>
+            <p>Sign in with Google to continue.</p>
 
-            <form id="auth-email-form">
-                <input id="auth-email" type="email" placeholder="you@example.com" required>
-                <button class="btn btn-primary" type="submit">Send OTP</button>
-            </form>
+            <div class="auth-actions">
+                <button class="btn auth-google-btn" type="button" id="auth-google-btn">
+                    <span class="google-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" role="img" aria-label="Google">
+                            <path d="M23.49 12.27c0-.86-.08-1.72-.24-2.56H12v4.85h6.46a5.53 5.53 0 0 1-2.4 3.63v3.01h3.87c2.27-2.1 3.56-5.2 3.56-8.93Z" fill="#4285F4"/>
+                            <path d="M12 24c3.24 0 5.96-1.07 7.95-2.9l-3.87-3.01c-1.07.73-2.45 1.16-4.08 1.16-3.13 0-5.77-2.12-6.72-4.97H1.29v3.13A12 12 0 0 0 12 24Z" fill="#34A853"/>
+                            <path d="M5.28 14.28A7.2 7.2 0 0 1 4.9 12c0-.79.14-1.55.38-2.28V6.59H1.29A12 12 0 0 0 0 12c0 1.94.47 3.78 1.29 5.41l4-3.13Z" fill="#FBBC05"/>
+                            <path d="M12 4.75c1.76 0 3.34.6 4.58 1.79l3.44-3.44C17.95 1.08 15.24 0 12 0 7.3 0 3.27 2.69 1.29 6.59l4 3.13c.95-2.85 3.59-4.97 6.72-4.97Z" fill="#EA4335"/>
+                        </svg>
+                    </span>
+                    Continue with Google
+                </button>
+            </div>
 
-            <form id="auth-code-form" style="margin-top:12px;display:none">
-                <input id="auth-code" type="text" placeholder="Enter 6-digit code" required>
-                <div class="auth-actions">
-                    <button class="btn btn-primary" type="submit">Verify</button>
-                    <button class="btn btn-secondary" type="button" id="auth-resend">Resend</button>
-                </div>
-            </form>
-
-            <p class="auth-hint" id="auth-hint">We will send a short-lived code to your inbox.</p>
+            <p class="auth-hint">You will be redirected to Google to sign in.</p>
         </div>
     `;
 
-    const hintEl = document.getElementById('auth-hint');
-    const codeForm = document.getElementById('auth-code-form');
-
-    document.getElementById('auth-email-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('auth-email').value.trim();
-        if (!email) return showToast('Enter a valid email', 'error');
-        authState.pendingEmail = email;
-
-        const { error } = await client.auth.signInWithOtp({
-            email,
-            options: { shouldCreateUser: true }
+    document.getElementById('auth-google-btn').addEventListener('click', async () => {
+        const { error } = await client.auth.signInWithOAuth({
+            provider: 'google',
+            options: { redirectTo: window.location.origin }
         });
 
-        if (error) return showToast(error.message, 'error');
-        showToast('OTP sent to your email');
-        hintEl.textContent = `Code sent to ${email}. Check your inbox.`;
-        codeForm.style.display = 'block';
-    });
-
-    document.getElementById('auth-code-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const code = document.getElementById('auth-code').value.trim();
-        if (!code) return showToast('Enter the code', 'error');
-
-        const { error } = await client.auth.verifyOtp({
-            email: authState.pendingEmail,
-            token: code,
-            type: 'email'
-        });
-
-        if (error) return showToast(error.message, 'error');
-        showToast('Signed in successfully');
-        setAuthMode(true);
-        await handleRoute();
-    });
-
-    document.getElementById('auth-resend').addEventListener('click', async () => {
-        if (!authState.pendingEmail) return showToast('Enter your email first', 'error');
-        const { error } = await client.auth.signInWithOtp({
-            email: authState.pendingEmail,
-            options: { shouldCreateUser: true }
-        });
-        if (error) return showToast(error.message, 'error');
-        showToast('OTP resent');
-        hintEl.textContent = `Code resent to ${authState.pendingEmail}.`;
+        if (error) showToast(error.message, 'error');
     });
 }
 
