@@ -8,6 +8,21 @@ function navigateTo(route) {
     window.location.hash = `#/${route}`;
 }
 
+// ── Theme helper ──
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+
+    const themeToggle = document.getElementById('theme-toggle');
+    if (!themeToggle) return;
+
+    const iconName = theme === 'dark' ? 'sun' : 'moon';
+    const iconEl = themeToggle.querySelector('i');
+    if (iconEl) iconEl.setAttribute('data-lucide', iconName);
+    themeToggle.setAttribute('aria-pressed', theme === 'dark');
+    lucide.createIcons();
+}
+
 // ── Route handler ──
 async function handleRoute() {
     const hash = window.location.hash || '#/home';
@@ -44,6 +59,19 @@ async function handleRoute() {
 document.addEventListener('DOMContentLoaded', () => {
     // Listen for hash changes
     window.addEventListener('hashchange', handleRoute);
+
+    // Theme toggle
+    const storedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(storedTheme || (prefersDark ? 'dark' : 'light'));
+
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            applyTheme(isDark ? 'light' : 'dark');
+        });
+    }
 
     // Modal close handlers
     document.getElementById('modal-close-btn').addEventListener('click', closeModal);
