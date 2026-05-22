@@ -1,139 +1,129 @@
 // ══════════════════════════════════════════
-// StudySnap — Supabase API Layer
+// StudySnap — LocalStorage API Layer
 // ══════════════════════════════════════════
 
+// Initialize LocalStorage if empty
+if (!localStorage.getItem('studysnap_decks')) {
+    localStorage.setItem('studysnap_decks', JSON.stringify([]));
+}
+if (!localStorage.getItem('studysnap_cards')) {
+    localStorage.setItem('studysnap_cards', JSON.stringify([]));
+}
+
 const API = {
+    // ── Helpers ──
+    _getDecks() { return JSON.parse(localStorage.getItem('studysnap_decks')); },
+    _getCards() { return JSON.parse(localStorage.getItem('studysnap_cards')); },
+    _saveDecks(data) { localStorage.setItem('studysnap_decks', JSON.stringify(data)); },
+    _saveCards(data) { localStorage.setItem('studysnap_cards', JSON.stringify(data)); },
+    _generateId() { return Math.random().toString(36).substr(2, 9); },
 
     // ── Decks ──
     async getDecks() {
-        const { data, error } = await db
-            .from('decks')
-            .select('*')
-            .order('created_at', { ascending: false });
-        if (error) throw error;
-        return data;
+        return this._getDecks().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     },
 
     async getDeck(id) {
-        const { data, error } = await db
-            .from('decks')
-            .select('*')
-            .eq('id', id)
-            .single();
-        if (error) throw error;
-        return data;
+        const deck = this._getDecks().find(d => d.id === id);
+        if (!deck) throw new Error('Deck not found');
+        return deck;
     },
 
     async createDeck(deck) {
-        const { data, error } = await db
-            .from('decks')
-            .insert([deck])
-            .select()
-            .single();
-        if (error) throw error;
-        return data;
+        const decks = this._getDecks();
+        const newDeck = {
+            ...deck,
+            id: this._generateId(),
+            created_at: new Date().toISOString()
+        };
+        decks.push(newDeck);
+        this._saveDecks(decks);
+        return newDeck;
     },
 
     async updateDeck(id, updates) {
-        const { data, error } = await db
-            .from('decks')
-            .update(updates)
-            .eq('id', id)
-            .select()
-            .single();
-        if (error) throw error;
-        return data;
+        const decks = this._getDecks();
+        const index = decks.findIndex(d => d.id === id);
+        if (index === -1) throw new Error('Deck not found');
+        decks[index] = { ...decks[index], ...updates };
+        this._saveDecks(decks);
+        return decks[index];
     },
 
     async deleteDeck(id) {
-        const { error } = await db
-            .from('decks')
-            .delete()
-            .eq('id', id);
-        if (error) throw error;
+        // Delete deck
+        let decks = this._getDecks();
+        decks = decks.filter(d => d.id !== id);
+        this._saveDecks(decks);
+        
+        // Cascade delete cards
+        let cards = this._getCards();
+        cards = cards.filter(c => c.deck_id !== id);
+        this._saveCards(cards);
     },
 
     // ── Cards ──
     async getCards(deckId) {
-        const { data, error } = await db
-            .from('cards')
-            .select('*')
-            .eq('deck_id', deckId)
-            .order('created_at', { ascending: false });
-        if (error) throw error;
-        return data;
+        return this._getCards()
+            .filter(c => c.deck_id === deckId)
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     },
 
     async getCard(id) {
-        const { data, error } = await db
-            .from('cards')
-            .select('*')
-            .eq('id', id)
-            .single();
-        if (error) throw error;
-        return data;
+        const card = this._getCards().find(c => c.id === id);
+        if (!card) throw new Error('Card not found');
+        return card;
     },
 
     async createCard(card) {
-        const { data, error } = await db
-            .from('cards')
-            .insert([card])
-            .select()
-            .single();
-        if (error) throw error;
-        return data;
+        const cards = this._getCards();
+        const newCard = {
+            ...card,
+            id: this._generateId(),
+            ease_factor: 2.5,
+            interval_days: 0,
+            repetitions: 0,
+            next_review: new Date().toISOString(),
+            created_at: new Date().toISOString()
+        };
+        cards.push(newCard);
+        this._saveCards(cards);
+        return newCard;
     },
 
     async updateCard(id, updates) {
-        const { data, error } = await db
-            .from('cards')
-            .update(updates)
-            .eq('id', id)
-            .select()
-            .single();
-        if (error) throw error;
-        return data;
+        const cards = this._getCards();
+        const index = cards.findIndex(c => c.id === id);
+        if (index === -1) throw new Error('Card not found');
+        cards[index] = { ...cards[index], ...updates };
+        this._saveCards(cards);
+        return cards[index];
     },
 
     async deleteCard(id) {
-        const { error } = await db
-            .from('cards')
-            .delete()
-            .eq('id', id);
-        if (error) throw error;
+        let cards = this._getCards();
+        cards = cards.filter(c => c.id !== id);
+        this._saveCards(cards);
     },
 
-    // ── Quiz: get cards due for review ──
+    // ── Quiz ──
     async getQuizCards(deckId) {
-        const now = new Date().toISOString();
-        const { data, error } = await db
-            .from('cards')
-            .select('*')
-            .eq('deck_id', deckId)
-            .lte('next_review', now)
-            .order('next_review', { ascending: true });
-        if (error) throw error;
-        return data;
+        const now = new Date();
+        return this._getCards()
+            .filter(c => c.deck_id === deckId && new Date(c.next_review) <= now)
+            .sort((a, b) => new Date(a.next_review) - new Date(b.next_review));
     },
 
-    // ── Submit review result (SM-2 update) ──
     async submitReview(cardId, rating) {
         const card = await this.getCard(cardId);
         const updates = calculateNextReview(card, rating);
         return await this.updateCard(cardId, updates);
     },
 
-    // ── Aggregate stats ──
+    // ── Stats ──
     async getStats() {
-        const [decksRes, cardsRes] = await Promise.all([
-            db.from('decks').select('*'),
-            db.from('cards').select('*')
-        ]);
-        if (decksRes.error) throw decksRes.error;
-        if (cardsRes.error) throw cardsRes.error;
-
-        const decks = decksRes.data;
-        const cards = cardsRes.data;
+        const decks = this._getDecks();
+        const cards = this._getCards();
         const now = new Date();
 
         const dueCards = cards.filter(c => new Date(c.next_review) <= now);
@@ -144,32 +134,19 @@ const API = {
             totalCards: cards.length,
             dueToday: dueCards.length,
             mastered: masteredCards.length,
-            masteryPercent: cards.length > 0
+            masteryPercent: cards.length > 0 
                 ? Math.round((masteredCards.length / cards.length) * 100) : 0,
             decks,
             cards
         };
     },
 
-    // ── Get card count per deck ──
     async getDeckCardCount(deckId) {
-        const { count, error } = await db
-            .from('cards')
-            .select('*', { count: 'exact', head: true })
-            .eq('deck_id', deckId);
-        if (error) throw error;
-        return count;
+        return this._getCards().filter(c => c.deck_id === deckId).length;
     },
 
-    // ── Get due count for a deck ──
     async getDeckDueCount(deckId) {
-        const now = new Date().toISOString();
-        const { count, error } = await db
-            .from('cards')
-            .select('*', { count: 'exact', head: true })
-            .eq('deck_id', deckId)
-            .lte('next_review', now);
-        if (error) throw error;
-        return count;
+        const now = new Date();
+        return this._getCards().filter(c => c.deck_id === deckId && new Date(c.next_review) <= now).length;
     }
 };
